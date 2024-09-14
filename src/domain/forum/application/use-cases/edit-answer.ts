@@ -4,7 +4,7 @@ import { AnswersRepository } from "../repositories/answers-repository";
 import { ResourceNotFoundError } from "@/core/errors/errors/resource-not-found-error";
 import { NotAllowedError } from "@/core/errors/errors/not-allowed-error";
 import { AnswerAttachment } from "../../enterprise/entities/answer-attachment";
-import { AnswerAttachmentsRepository } from "../repositories/answer-attachment-repository";
+import { AnswerAttachmentsRepository } from "../repositories/answer-attachments-repository";
 import { AnswerAttachmentList } from "../../enterprise/entities/answer-attachment-list";
 import { UniqueEntityId } from "@/core/entities/unique-entity-id";
 
