@@ -5,6 +5,7 @@
   "rules": {
     "no-useless-constructor": "off",
     "camelcase": "off",
+    "no-unused-vars": "warn",
     "prettier/prettier": [
       "error",
       {
