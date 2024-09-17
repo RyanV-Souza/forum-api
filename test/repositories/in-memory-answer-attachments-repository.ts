@@ -7,18 +7,30 @@ export class InMemoryAnswerAttachmentsRepository
   public items: AnswerAttachment[] = [];
 
   async findManyByAnswerId(answerId: string) {
-    const items = this.items.filter(
+    const answerAttachments = this.items.filter(
       (item) => item.answerId.toString() === answerId,
     );
 
-    return items;
+    return answerAttachments;
+  }
+
+  async createMany(attachments: AnswerAttachment[]): Promise<void> {
+    this.items.push(...attachments);
+  }
+
+  async deleteMany(attachments: AnswerAttachment[]): Promise<void> {
+    const answerAttachments = this.items.filter((item) => {
+      return !attachments.some((attachment) => attachment.equals(item));
+    });
+
+    this.items = answerAttachments;
   }
 
   async deleteManyByAnswerId(answerId: string) {
-    const items = this.items.filter(
+    const answerAttachments = this.items.filter(
       (item) => item.answerId.toString() !== answerId,
     );
 
-    this.items = items;
+    this.items = answerAttachments;
   }
 }

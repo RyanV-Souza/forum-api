@@ -1,9 +1,10 @@
-import { UniqueEntityId } from "@/core/entities/unique-entity-id";
 import { AnswersRepository } from "../repositories/answers-repository";
-import { AnswerComment } from "../../enterprise/entities/answer-comment";
-import { AnswerCommentsRepository } from "../repositories/answer-comments-repository";
+import { UniqueEntityID } from "@/core/entities/unique-entity-id";
+import { AnswerComment } from "@/domain/forum/enterprise/entities/answer-comment";
+import { AnswerCommentsRepository } from "@/domain/forum/application/repositories/answer-comments-repository";
 import { Either, left, right } from "@/core/either";
 import { ResourceNotFoundError } from "@/core/errors/errors/resource-not-found-error";
+import { Injectable } from "@nestjs/common";
 
 interface CommentOnAnswerUseCaseRequest {
   authorId: string;
@@ -18,6 +19,7 @@ type CommentOnAnswerUseCaseResponse = Either<
   }
 >;
 
+@Injectable()
 export class CommentOnAnswerUseCase {
   constructor(
     private answersRepository: AnswersRepository,
@@ -36,13 +38,15 @@ export class CommentOnAnswerUseCase {
     }
 
     const answerComment = AnswerComment.create({
-      authorId: new UniqueEntityId(authorId),
+      authorId: new UniqueEntityID(authorId),
+      answerId: new UniqueEntityID(answerId),
       content,
-      answerId: new UniqueEntityId(answerId),
     });
 
     await this.answerCommentsRepository.create(answerComment);
 
-    return right({ answerComment });
+    return right({
+      answerComment,
+    });
   }
 }

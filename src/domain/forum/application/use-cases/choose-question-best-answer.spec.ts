@@ -1,40 +1,49 @@
-import { InMemoryQuestionsRepository } from "test/repositories/in-memory-questions-repository";
 import { InMemoryAnswersRepository } from "test/repositories/in-memory-answers-repository";
-import { ChooseQuestionBestAnswer } from "./choose-question-best-answer";
-import { makeQuestion } from "test/factories/make-question";
 import { makeAnswer } from "test/factories/make-answer";
-import { UniqueEntityId } from "@/core/entities/unique-entity-id";
+import { UniqueEntityID } from "@/core/entities/unique-entity-id";
+import { InMemoryQuestionsRepository } from "test/repositories/in-memory-questions-repository";
+import { ChooseQuestionBestAnswerUseCase } from "@/domain/forum/application/use-cases/choose-question-best-answer";
+import { makeQuestion } from "test/factories/make-question";
 import { NotAllowedError } from "@/core/errors/errors/not-allowed-error";
-import { InMemoryQuestionAttachmentsRepository } from "test/repositories/in-memory-question-attachments-repository";
 import { InMemoryAnswerAttachmentsRepository } from "test/repositories/in-memory-answer-attachments-repository";
+import { InMemoryQuestionAttachmentsRepository } from "test/repositories/in-memory-question-attachments-repository";
+import { InMemoryStudentsRepository } from "test/repositories/in-memory-students-repository";
+import { InMemoryAttachmentsRepository } from "test/repositories/in-memory-attachments-repository";
 
-let inMemoryAnswersRepository: InMemoryAnswersRepository;
-let inMemoryQuestionsRepository: InMemoryQuestionsRepository;
-let inMemoryQuestionAttachmentsRepository: InMemoryQuestionAttachmentsRepository;
 let inMemoryAnswerAttachmentsRepository: InMemoryAnswerAttachmentsRepository;
-let sut: ChooseQuestionBestAnswer;
+let inMemoryQuestionAttachmentsRepository: InMemoryQuestionAttachmentsRepository;
+let inMemoryQuestionsRepository: InMemoryQuestionsRepository;
+let inMemoryAnswersRepository: InMemoryAnswersRepository;
+let inMemoryAttachmentsRepository: InMemoryAttachmentsRepository;
+let inMemoryStudentsRepository: InMemoryStudentsRepository;
+let sut: ChooseQuestionBestAnswerUseCase;
 
-describe("choose question best answer use case", () => {
+describe("Choose Question Best Answer", () => {
   beforeEach(() => {
-    inMemoryQuestionAttachmentsRepository =
-      new InMemoryQuestionAttachmentsRepository();
     inMemoryAnswerAttachmentsRepository =
       new InMemoryAnswerAttachmentsRepository();
-
+    inMemoryQuestionAttachmentsRepository =
+      new InMemoryQuestionAttachmentsRepository();
+    inMemoryAttachmentsRepository = new InMemoryAttachmentsRepository();
+    inMemoryStudentsRepository = new InMemoryStudentsRepository();
+    inMemoryQuestionsRepository = new InMemoryQuestionsRepository(
+      inMemoryQuestionAttachmentsRepository,
+      inMemoryAttachmentsRepository,
+      inMemoryStudentsRepository,
+    );
     inMemoryAnswersRepository = new InMemoryAnswersRepository(
       inMemoryAnswerAttachmentsRepository,
     );
-    inMemoryQuestionsRepository = new InMemoryQuestionsRepository(
-      inMemoryQuestionAttachmentsRepository,
-    );
-    sut = new ChooseQuestionBestAnswer(
-      inMemoryAnswersRepository,
+
+    sut = new ChooseQuestionBestAnswerUseCase(
       inMemoryQuestionsRepository,
+      inMemoryAnswersRepository,
     );
   });
 
-  it("should be able to choose a question best answer", async () => {
+  it("should be able to choose the question best answer", async () => {
     const question = makeQuestion();
+
     const answer = makeAnswer({
       questionId: question.id,
     });
@@ -52,10 +61,11 @@ describe("choose question best answer use case", () => {
     );
   });
 
-  it("should not be able to choose a question best answer if not the author", async () => {
+  it("should not be able to to choose another user question best answer", async () => {
     const question = makeQuestion({
-      authorId: new UniqueEntityId("author-1"),
+      authorId: new UniqueEntityID("author-1"),
     });
+
     const answer = makeAnswer({
       questionId: question.id,
     });

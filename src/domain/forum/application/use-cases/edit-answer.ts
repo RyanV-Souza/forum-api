@@ -1,18 +1,19 @@
-import { Either, left, right } from "@/core/either";
-import { Answer } from "../../enterprise/entities/answer";
+import { Answer } from "@/domain/forum/enterprise/entities/answer";
 import { AnswersRepository } from "../repositories/answers-repository";
+import { Either, left, right } from "@/core/either";
 import { ResourceNotFoundError } from "@/core/errors/errors/resource-not-found-error";
 import { NotAllowedError } from "@/core/errors/errors/not-allowed-error";
-import { AnswerAttachment } from "../../enterprise/entities/answer-attachment";
-import { AnswerAttachmentsRepository } from "../repositories/answer-attachments-repository";
 import { AnswerAttachmentList } from "../../enterprise/entities/answer-attachment-list";
-import { UniqueEntityId } from "@/core/entities/unique-entity-id";
+import { UniqueEntityID } from "@/core/entities/unique-entity-id";
+import { AnswerAttachmentsRepository } from "@/domain/forum/application/repositories/answer-attachments-repository";
+import { AnswerAttachment } from "../../enterprise/entities/answer-attachment";
+import { Injectable } from "@nestjs/common";
 
 interface EditAnswerUseCaseRequest {
   authorId: string;
   answerId: string;
   content: string;
-  attachmentIds: string[];
+  attachmentsIds: string[];
 }
 
 type EditAnswerUseCaseResponse = Either<
@@ -22,6 +23,7 @@ type EditAnswerUseCaseResponse = Either<
   }
 >;
 
+@Injectable()
 export class EditAnswerUseCase {
   constructor(
     private answersRepository: AnswersRepository,
@@ -30,9 +32,9 @@ export class EditAnswerUseCase {
 
   async execute({
     authorId,
-    content,
     answerId,
-    attachmentIds,
+    content,
+    attachmentsIds,
   }: EditAnswerUseCaseRequest): Promise<EditAnswerUseCaseResponse> {
     const answer = await this.answersRepository.findById(answerId);
 
@@ -40,7 +42,7 @@ export class EditAnswerUseCase {
       return left(new ResourceNotFoundError());
     }
 
-    if (answer.authorId.toString() !== authorId) {
+    if (authorId !== answer.authorId.toString()) {
       return left(new NotAllowedError());
     }
 
@@ -51,20 +53,22 @@ export class EditAnswerUseCase {
       currentAnswerAttachments,
     );
 
-    const answerAttachments = attachmentIds.map((attachmentId) =>
-      AnswerAttachment.create({
-        attachmentId: new UniqueEntityId(attachmentId),
+    const answerAttachments = attachmentsIds.map((attachmentId) => {
+      return AnswerAttachment.create({
+        attachmentId: new UniqueEntityID(attachmentId),
         answerId: answer.id,
-      }),
-    );
+      });
+    });
 
     answerAttachmentList.update(answerAttachments);
 
-    answer.content = content;
     answer.attachments = answerAttachmentList;
+    answer.content = content;
 
     await this.answersRepository.save(answer);
 
-    return right({ answer });
+    return right({
+      answer,
+    });
   }
 }

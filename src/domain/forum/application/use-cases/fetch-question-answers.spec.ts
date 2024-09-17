@@ -1,49 +1,45 @@
-import { FetchQuestionAnswers } from "./fetch-question-answers";
 import { InMemoryAnswersRepository } from "test/repositories/in-memory-answers-repository";
+import { FetchQuestionAnswersUseCase } from "@/domain/forum/application/use-cases/fetch-question-answers";
 import { makeAnswer } from "test/factories/make-answer";
-import { UniqueEntityId } from "@/core/entities/unique-entity-id";
+import { UniqueEntityID } from "@/core/entities/unique-entity-id";
 import { InMemoryAnswerAttachmentsRepository } from "test/repositories/in-memory-answer-attachments-repository";
 
 let inMemoryAnswerAttachmentsRepository: InMemoryAnswerAttachmentsRepository;
 let inMemoryAnswersRepository: InMemoryAnswersRepository;
-let sut: FetchQuestionAnswers;
+let sut: FetchQuestionAnswersUseCase;
 
-describe("fetch question answers use case", () => {
+describe("Fetch Question Answers", () => {
   beforeEach(() => {
     inMemoryAnswerAttachmentsRepository =
       new InMemoryAnswerAttachmentsRepository();
-
     inMemoryAnswersRepository = new InMemoryAnswersRepository(
       inMemoryAnswerAttachmentsRepository,
     );
-    sut = new FetchQuestionAnswers(inMemoryAnswersRepository);
+    sut = new FetchQuestionAnswersUseCase(inMemoryAnswersRepository);
   });
 
   it("should be able to fetch question answers", async () => {
     await inMemoryAnswersRepository.create(
       makeAnswer({
-        questionId: new UniqueEntityId("question-1"),
+        questionId: new UniqueEntityID("question-1"),
       }),
     );
-
     await inMemoryAnswersRepository.create(
       makeAnswer({
-        questionId: new UniqueEntityId("question-1"),
+        questionId: new UniqueEntityID("question-1"),
       }),
     );
-
     await inMemoryAnswersRepository.create(
       makeAnswer({
-        questionId: new UniqueEntityId("question-1"),
+        questionId: new UniqueEntityID("question-1"),
       }),
     );
 
     const result = await sut.execute({
-      page: 1,
       questionId: "question-1",
+      page: 1,
     });
 
-    expect(result.isRight()).toBe(true);
     expect(result.value?.answers).toHaveLength(3);
   });
 
@@ -51,17 +47,16 @@ describe("fetch question answers use case", () => {
     for (let i = 1; i <= 22; i++) {
       await inMemoryAnswersRepository.create(
         makeAnswer({
-          questionId: new UniqueEntityId("question-1"),
+          questionId: new UniqueEntityID("question-1"),
         }),
       );
     }
 
     const result = await sut.execute({
-      page: 2,
       questionId: "question-1",
+      page: 2,
     });
 
-    expect(result.isRight()).toBe(true);
     expect(result.value?.answers).toHaveLength(2);
   });
 });

@@ -1,38 +1,41 @@
-import { Body, Controller, Post, UseGuards } from "@nestjs/common";
-import { AuthGuard } from "@nestjs/passport";
-import { CurrentUser } from "@/infra/auth/current-user.decorator";
-import { TokenPayload } from "@/infra/auth/jwt.strategy";
-import { ZodValidationPipe } from "@/infra/http/pipes/zod-validation.pipe";
+import { BadRequestException, Body, Controller, Post } from "@nestjs/common";
+import { CurrentUser } from "@/infra/auth/current-user-decorator";
+import { UserPayload } from "@/infra/auth/jwt.strategy";
+import { ZodValidationPipe } from "@/infra/http/pipes/zod-validation-pipe";
 import { z } from "zod";
 import { CreateQuestionUseCase } from "@/domain/forum/application/use-cases/create-question";
 
-const createQuestionSchema = z.object({
+const createQuestionBodySchema = z.object({
   title: z.string(),
   content: z.string(),
+  attachments: z.array(z.string().uuid()),
 });
 
-type CreateQuestionBodySchema = z.infer<typeof createQuestionSchema>;
+const bodyValidationPipe = new ZodValidationPipe(createQuestionBodySchema);
 
-const bodyValidationPipe = new ZodValidationPipe(createQuestionSchema);
+type CreateQuestionBodySchema = z.infer<typeof createQuestionBodySchema>;
 
 @Controller("/questions")
-@UseGuards(AuthGuard("jwt"))
 export class CreateQuestionController {
   constructor(private createQuestion: CreateQuestionUseCase) {}
 
   @Post()
   async handle(
-    @CurrentUser() user: TokenPayload,
     @Body(bodyValidationPipe) body: CreateQuestionBodySchema,
+    @CurrentUser() user: UserPayload,
   ) {
-    const { title, content } = body;
+    const { title, content, attachments } = body;
     const userId = user.sub;
 
-    await this.createQuestion.execute({
+    const result = await this.createQuestion.execute({
       title,
       content,
       authorId: userId,
-      attachmentIds: [],
+      attachmentsIds: attachments,
     });
+
+    if (result.isLeft()) {
+      throw new BadRequestException();
+    }
   }
 }

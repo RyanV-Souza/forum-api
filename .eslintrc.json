@@ -6,6 +6,8 @@
     "no-useless-constructor": "off",
     "camelcase": "off",
     "no-unused-vars": "warn",
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-new": "off",
     "prettier/prettier": [
       "error",
       {
